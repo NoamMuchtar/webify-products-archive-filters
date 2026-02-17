@@ -323,6 +323,18 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
         $current_min   = isset( $_GET['min_price'] ) ? floatval( $_GET['min_price'] ) : '';
         $current_max   = isset( $_GET['max_price'] ) ? floatval( $_GET['max_price'] ) : '';
 
+        // Count active filters for badge
+        $total_active_filters = 0;
+        if ( $current_min !== '' ) $total_active_filters++;
+        if ( $current_max !== '' ) $total_active_filters++;
+        foreach ( $filters as $filter ) {
+            if ( 'price' === $filter['type'] ) continue;
+            $param_key = 'filter_' . $filter['slug'];
+            if ( ! empty( $_GET[ $param_key ] ) ) {
+                $total_active_filters += count( explode( ',', sanitize_text_field( $_GET[ $param_key ] ) ) );
+            }
+        }
+
         // Determine the current queried object for the AJAX request
         $queried = get_queried_object();
         $current_term_id  = 0;
@@ -335,8 +347,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
 
         <!-- Mobile trigger button -->
         <button class="wpaf-mobile-trigger" aria-label="<?php esc_attr_e( 'Open filters', 'webify-products-archive-filters' ); ?>">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             <span><?php echo esc_html( $settings['mobile_button_text'] ); ?></span>
+            <?php if ( $total_active_filters > 0 ) : ?>
+                <span class="wpaf-active-count"><?php echo esc_html( $total_active_filters ); ?></span>
+            <?php endif; ?>
         </button>
 
         <!-- Overlay for mobile sidebar -->
@@ -345,11 +360,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
         <!-- Filters container -->
         <div class="wpaf-filters-wrapper" data-term-id="<?php echo esc_attr( $current_term_id ); ?>" data-taxonomy="<?php echo esc_attr( $current_taxonomy ); ?>">
 
-            <!-- Mobile sidebar close button -->
+            <!-- Mobile sidebar header -->
             <div class="wpaf-sidebar-header">
                 <span class="wpaf-sidebar-title"><?php echo esc_html( $settings['mobile_button_text'] ); ?></span>
                 <button class="wpaf-sidebar-close" aria-label="<?php esc_attr_e( 'Close filters', 'webify-products-archive-filters' ); ?>">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
 
@@ -359,7 +374,7 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                         <button class="wpaf-accordion-header" type="button" aria-expanded="<?php echo 0 === $index ? 'true' : 'false'; ?>">
                             <span class="wpaf-accordion-title"><?php echo esc_html( $filter['title'] ); ?></span>
                             <span class="wpaf-accordion-arrow">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                             </span>
                         </button>
                         <div class="wpaf-accordion-body" <?php echo 0 !== $index ? 'style="display:none;"' : ''; ?>>
@@ -385,8 +400,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
             </div>
 
             <div class="wpaf-actions">
-                <button type="button" class="wpaf-apply-filters"><?php esc_html_e( 'החל סינון', 'webify-products-archive-filters' ); ?></button>
-                <button type="button" class="wpaf-clear-filters"><?php esc_html_e( 'נקה סינון', 'webify-products-archive-filters' ); ?></button>
+                <button type="button" class="wpaf-apply-filters">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-inline-end: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    <?php esc_html_e( 'החל סינון', 'webify-products-archive-filters' ); ?>
+                </button>
+                <button type="button" class="wpaf-clear-filters"><?php esc_html_e( 'נקה הכל', 'webify-products-archive-filters' ); ?></button>
             </div>
         </div>
         <?php
@@ -396,17 +414,18 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
      * Render price filter inputs.
      */
     private function render_price_filter( $current_min, $current_max ) {
+        $currency = get_woocommerce_currency_symbol();
         ?>
         <div class="wpaf-price-filter" data-filter-type="price">
             <div class="wpaf-price-inputs">
                 <div class="wpaf-price-field">
-                    <label for="wpaf-min-price"><?php esc_html_e( 'מ-', 'webify-products-archive-filters' ); ?></label>
-                    <input type="number" id="wpaf-min-price" class="wpaf-price-input" name="min_price" placeholder="<?php esc_attr_e( 'מינימום', 'webify-products-archive-filters' ); ?>" value="<?php echo esc_attr( $current_min ); ?>" min="0" step="1">
+                    <label for="wpaf-min-price"><?php esc_html_e( 'מחיר מינימום', 'webify-products-archive-filters' ); ?></label>
+                    <input type="number" id="wpaf-min-price" class="wpaf-price-input" name="min_price" placeholder="<?php echo esc_attr( $currency ); ?> <?php esc_attr_e( 'מ-', 'webify-products-archive-filters' ); ?>" value="<?php echo esc_attr( $current_min ); ?>" min="0" step="1">
                 </div>
-                <span class="wpaf-price-separator">-</span>
+                <span class="wpaf-price-separator">&ndash;</span>
                 <div class="wpaf-price-field">
-                    <label for="wpaf-max-price"><?php esc_html_e( 'עד', 'webify-products-archive-filters' ); ?></label>
-                    <input type="number" id="wpaf-max-price" class="wpaf-price-input" name="max_price" placeholder="<?php esc_attr_e( 'מקסימום', 'webify-products-archive-filters' ); ?>" value="<?php echo esc_attr( $current_max ); ?>" min="0" step="1">
+                    <label for="wpaf-max-price"><?php esc_html_e( 'מחיר מקסימום', 'webify-products-archive-filters' ); ?></label>
+                    <input type="number" id="wpaf-max-price" class="wpaf-price-input" name="max_price" placeholder="<?php echo esc_attr( $currency ); ?> <?php esc_attr_e( 'עד', 'webify-products-archive-filters' ); ?>" value="<?php echo esc_attr( $current_max ); ?>" min="0" step="1">
                 </div>
             </div>
         </div>

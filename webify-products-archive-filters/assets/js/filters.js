@@ -6,8 +6,10 @@
 
         init: function () {
             this.cacheDOM();
+            if (!this.$wrapper.length) return;
             this.bindEvents();
             this.restoreFromURL();
+            this.updateActiveCountBadge();
         },
 
         cacheDOM: function () {
@@ -19,7 +21,6 @@
             this.$overlay = $('.wpaf-sidebar-overlay');
             this.$closeBtn = this.$wrapper.find('.wpaf-sidebar-close');
             this.$productsContainer = null;
-            this.$paginationContainer = null;
 
             // Find the products container (Elementor archive products widget)
             var $products = $('.products');
@@ -29,11 +30,13 @@
         },
 
         bindEvents: function () {
+            var self = this;
+
             // Accordion toggle
             this.$accordion.on('click', '.wpaf-accordion-header', this.toggleAccordion.bind(this));
 
             // Apply filters
-            this.$applyBtn.on('click', this.applyFilters.bind(this));
+            this.$applyBtn.on('click', function () { self.applyFilters(1); });
 
             // Clear filters
             this.$clearBtn.on('click', this.clearFilters.bind(this));
@@ -44,7 +47,7 @@
             this.$overlay.on('click', this.closeSidebar.bind(this));
 
             // Color swatch toggle
-            this.$wrapper.on('click', '.wpaf-color-swatch', this.toggleColorSwatch);
+            this.$wrapper.on('click', '.wpaf-color-swatch', this.toggleColorSwatch.bind(this));
 
             // Handle pagination clicks on AJAX-loaded pagination
             $(document).on('click', '.woocommerce-pagination a', this.handlePagination.bind(this));
@@ -52,8 +55,18 @@
             // Close sidebar on ESC
             $(document).on('keydown', function (e) {
                 if (e.key === 'Escape') {
-                    WPAF.closeSidebar();
+                    self.closeSidebar();
                 }
+            });
+
+            // Update badge when checkboxes change
+            this.$wrapper.on('change', 'input[type="checkbox"]', function () {
+                self.updateActiveCountBadge();
+            });
+
+            // Update badge when price changes
+            this.$wrapper.on('input', '.wpaf-price-input', function () {
+                self.updateActiveCountBadge();
             });
         },
 
@@ -66,20 +79,20 @@
             if (isActive) {
                 $item.removeClass('wpaf-active');
                 $header.attr('aria-expanded', 'false');
-                $body.slideUp(250);
+                $body.slideUp(280);
             } else {
                 $item.addClass('wpaf-active');
                 $header.attr('aria-expanded', 'true');
-                $body.slideDown(250);
+                $body.slideDown(280);
             }
         },
 
         toggleColorSwatch: function (e) {
             e.preventDefault();
-            var $swatch = $(this);
+            var $swatch = $(e.currentTarget);
             var $checkbox = $swatch.find('input[type="checkbox"]');
             var isChecked = $checkbox.prop('checked');
-            $checkbox.prop('checked', !isChecked);
+            $checkbox.prop('checked', !isChecked).trigger('change');
             $swatch.toggleClass('wpaf-selected');
         },
 
@@ -93,6 +106,36 @@
             this.$wrapper.removeClass('wpaf-sidebar-open');
             this.$overlay.removeClass('wpaf-overlay-visible');
             $('body').removeClass('wpaf-sidebar-active');
+        },
+
+        /**
+         * Count the number of active filters and update the badge on the mobile trigger.
+         */
+        updateActiveCountBadge: function () {
+            var count = 0;
+
+            // Count checked checkboxes
+            this.$wrapper.find('input[type="checkbox"]:checked').each(function () {
+                count++;
+            });
+
+            // Count filled price fields
+            var min = this.$wrapper.find('input[name="min_price"]').val();
+            var max = this.$wrapper.find('input[name="max_price"]').val();
+            if (min) count++;
+            if (max) count++;
+
+            // Update badge
+            var $badge = this.$mobileTrigger.find('.wpaf-active-count');
+            if (count > 0) {
+                if ($badge.length) {
+                    $badge.text(count);
+                } else {
+                    this.$mobileTrigger.append('<span class="wpaf-active-count">' + count + '</span>');
+                }
+            } else {
+                $badge.remove();
+            }
         },
 
         collectFilters: function () {
@@ -154,41 +197,61 @@
                 taxonomy: this.$wrapper.data('taxonomy') || '',
             };
 
+            var self = this;
+
             $.ajax({
                 url: wpafData.ajaxUrl,
                 type: 'POST',
                 data: ajaxData,
                 success: function (response) {
-                    if (response.success && WPAF.$productsContainer) {
-                        WPAF.$productsContainer.html(response.data.html);
+                    if (response.success && self.$productsContainer) {
+                        // Fade out old content
+                        self.$productsContainer.css('opacity', '0.3');
 
-                        // Update pagination
-                        var $existingPagination = $('.woocommerce-pagination');
-                        if ($existingPagination.length) {
-                            $existingPagination.replaceWith(response.data.pagination);
-                        } else if (response.data.pagination) {
-                            WPAF.$productsContainer.after(response.data.pagination);
-                        }
+                        setTimeout(function () {
+                            self.$productsContainer.html(response.data.html);
 
-                        // Update product count if visible
-                        var $resultCount = $('.woocommerce-result-count');
-                        if ($resultCount.length) {
-                            $resultCount.text(response.data.found_posts + ' מוצרים');
-                        }
+                            // Fade in new content
+                            self.$productsContainer.css({
+                                'opacity': '0',
+                                'transition': 'opacity 0.3s ease'
+                            });
 
-                        // Scroll to products
-                        $('html, body').animate({
-                            scrollTop: WPAF.$productsContainer.offset().top - 100
-                        }, 300);
+                            // Trigger reflow
+                            self.$productsContainer[0].offsetHeight;
+                            self.$productsContainer.css('opacity', '1');
+
+                            // Update pagination
+                            var $existingPagination = $('.woocommerce-pagination');
+                            if ($existingPagination.length) {
+                                $existingPagination.replaceWith(response.data.pagination);
+                            } else if (response.data.pagination) {
+                                self.$productsContainer.after(response.data.pagination);
+                            }
+
+                            // Update product count if visible
+                            var $resultCount = $('.woocommerce-result-count');
+                            if ($resultCount.length && response.data.found_posts !== undefined) {
+                                $resultCount.text(response.data.found_posts + ' ' + (response.data.found_posts === 1 ? 'מוצר' : 'מוצרים'));
+                            }
+
+                            // Scroll to products
+                            $('html, body').animate({
+                                scrollTop: self.$productsContainer.offset().top - 100
+                            }, 350);
+                        }, 150);
                     }
                 },
                 error: function () {
-                    console.error('WPAF: Filter request failed.');
+                    if (self.$productsContainer) {
+                        self.$productsContainer.css('opacity', '1');
+                    }
                 },
                 complete: function () {
-                    WPAF.isLoading = false;
-                    WPAF.hideLoader();
-                    WPAF.closeSidebar();
+                    self.isLoading = false;
+                    self.hideLoader();
+                    self.closeSidebar();
+                    self.updateActiveCountBadge();
                 }
             });
         },
@@ -203,6 +266,9 @@
             // Remove selected state from swatches
             this.$wrapper.find('.wpaf-color-swatch').removeClass('wpaf-selected');
 
+            // Update count
+            this.updateActiveCountBadge();
+
             // Apply cleared filters
             this.applyFilters(1);
         },
@@ -210,19 +276,24 @@
         handlePagination: function (e) {
             e.preventDefault();
             var href = $(e.currentTarget).attr('href');
-            var pageMatch = href.match(/paged[=\/](\d+)/);
-            var page = pageMatch ? parseInt(pageMatch[1], 10) : 1;
+            var page = 1;
 
-            // Also check for /page/N/ format
-            if (!pageMatch) {
-                pageMatch = href.match(/\/page\/(\d+)/);
-                page = pageMatch ? parseInt(pageMatch[1], 10) : 1;
+            var pageMatch = href.match(/\/page\/(\d+)/);
+            if (pageMatch) {
+                page = parseInt(pageMatch[1], 10);
+            } else {
+                pageMatch = href.match(/paged[=\/](\d+)/);
+                if (pageMatch) {
+                    page = parseInt(pageMatch[1], 10);
+                }
             }
 
             this.applyFilters(page);
         },
 
         updateURL: function (filterData, paged) {
+            if (!window.history || !window.history.pushState) return;
+
             var params = new URLSearchParams();
 
             if (filterData.min_price) params.set('min_price', filterData.min_price);
@@ -242,21 +313,19 @@
             var queryString = params.toString();
             if (queryString) newUrl += '?' + queryString;
 
-            window.history.pushState({}, '', newUrl);
+            window.history.pushState({ wpaf: true }, '', newUrl);
         },
 
         restoreFromURL: function () {
             var params = new URLSearchParams(window.location.search);
-            var hasFilters = false;
+            var self = this;
 
             // Restore price
             if (params.has('min_price')) {
                 this.$wrapper.find('input[name="min_price"]').val(params.get('min_price'));
-                hasFilters = true;
             }
             if (params.has('max_price')) {
                 this.$wrapper.find('input[name="max_price"]').val(params.get('max_price'));
-                hasFilters = true;
             }
 
             // Restore taxonomy filters from URL
@@ -267,20 +336,18 @@
 
                     slugs.forEach(function (slug) {
                         // Color swatches
-                        var $colorInput = WPAF.$wrapper.find('.wpaf-color-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
+                        var $colorInput = self.$wrapper.find('.wpaf-color-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
                         if ($colorInput.length) {
                             $colorInput.prop('checked', true);
                             $colorInput.closest('.wpaf-color-swatch').addClass('wpaf-selected');
                         }
 
                         // Checkbox filters
-                        var $checkInput = WPAF.$wrapper.find('.wpaf-checkbox-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
+                        var $checkInput = self.$wrapper.find('.wpaf-checkbox-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
                         if ($checkInput.length) {
                             $checkInput.prop('checked', true);
                         }
                     });
-
-                    hasFilters = true;
                 }
             });
         },
@@ -293,17 +360,31 @@
                     '<div class="wpaf-loader-overlay"><div class="wpaf-spinner"></div></div>'
                 );
             }
+
+            // Trigger reflow before adding class
+            this.$productsContainer.find('.wpaf-loader-overlay')[0].offsetHeight;
             this.$productsContainer.find('.wpaf-loader-overlay').addClass('wpaf-loading');
         },
 
         hideLoader: function () {
             if (!this.$productsContainer) return;
-            this.$productsContainer.find('.wpaf-loader-overlay').remove();
+            var $overlay = this.$productsContainer.find('.wpaf-loader-overlay');
+            $overlay.removeClass('wpaf-loading');
+            setTimeout(function () {
+                $overlay.remove();
+            }, 300);
         }
     };
 
     $(document).ready(function () {
         WPAF.init();
+    });
+
+    // Handle browser back/forward navigation
+    $(window).on('popstate', function (e) {
+        if (e.originalEvent.state && e.originalEvent.state.wpaf) {
+            window.location.reload();
+        }
     });
 
 })(jQuery);

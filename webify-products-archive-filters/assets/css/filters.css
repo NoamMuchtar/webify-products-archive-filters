@@ -1,18 +1,29 @@
 /* ========================================
    Webify Products Archive Filters
+   Premium Modern Design
    ======================================== */
 
-/* --- Accordion --- */
+/* === Base Reset === */
+.wpaf-filters-wrapper *,
+.wpaf-filters-wrapper *::before,
+.wpaf-filters-wrapper *::after,
+.wpaf-mobile-trigger *,
+.wpaf-mobile-trigger *::before,
+.wpaf-mobile-trigger *::after {
+    box-sizing: border-box;
+}
+
+/* === Accordion === */
 .wpaf-accordion {
     width: 100%;
 }
 
 .wpaf-accordion-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    overflow: hidden;
-    background: #fff;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.wpaf-accordion-item:last-child {
+    border-bottom: none;
 }
 
 .wpaf-accordion-header {
@@ -20,67 +31,118 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 14px 16px;
+    padding: 18px 4px;
     border: none;
-    background: none;
+    background: transparent;
     cursor: pointer;
+    font-family: inherit;
     font-size: 15px;
-    font-weight: 600;
-    color: #333;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #1a1a2e;
     text-align: right;
-    transition: background-color 0.2s ease;
+    transition: color 0.2s ease;
+    line-height: 1.4;
 }
 
 .wpaf-accordion-header:hover {
-    background-color: #f7f7f7;
+    color: #000;
+}
+
+.wpaf-accordion-header:focus {
+    outline: none;
+}
+
+.wpaf-accordion-header:focus-visible {
+    outline: 2px solid #4a6cf7;
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 .wpaf-accordion-arrow {
     display: inline-flex;
     align-items: center;
-    transition: transform 0.3s ease;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f5f5f7;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.wpaf-accordion-header:hover .wpaf-accordion-arrow {
+    background: #ededf0;
 }
 
 .wpaf-accordion-item.wpaf-active .wpaf-accordion-arrow {
     transform: rotate(180deg);
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.wpaf-accordion-item.wpaf-active .wpaf-accordion-arrow svg {
+    stroke: #fff;
 }
 
 .wpaf-accordion-body {
-    padding: 0 16px 16px;
+    padding: 0 4px 20px;
 }
 
-/* --- Price Filter --- */
+/* === Active filter badges === */
+.wpaf-active-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #4a6cf7;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    margin-inline-start: 8px;
+    line-height: 1;
+}
+
+/* === Price Filter === */
 .wpaf-price-filter {
-    padding-top: 4px;
+    padding-top: 2px;
 }
 
 .wpaf-price-inputs {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 .wpaf-price-field {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 .wpaf-price-field label {
-    font-size: 13px;
-    color: #666;
-    font-weight: 500;
+    font-size: 12px;
+    color: #8e8ea0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .wpaf-price-input {
     width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 10px 14px;
+    border: 1.5px solid #e2e2e8;
+    border-radius: 10px;
     font-size: 14px;
+    font-family: inherit;
+    color: #1a1a2e;
     outline: none;
-    transition: border-color 0.2s ease;
+    background: #fafafa;
+    transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
     -moz-appearance: textfield;
 }
 
@@ -90,169 +152,299 @@
     margin: 0;
 }
 
+.wpaf-price-input::placeholder {
+    color: #c0c0cc;
+    font-size: 13px;
+}
+
+.wpaf-price-input:hover {
+    border-color: #ccccd6;
+}
+
 .wpaf-price-input:focus {
-    border-color: #333;
+    border-color: #4a6cf7;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
 }
 
 .wpaf-price-separator {
-    font-size: 16px;
-    color: #999;
-    padding-top: 22px;
+    font-size: 18px;
+    color: #ccccd6;
+    padding-bottom: 10px;
+    font-weight: 300;
 }
 
-/* --- Color Swatches --- */
+/* === Color Swatches === */
 .wpaf-color-swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    padding-top: 4px;
+    gap: 8px;
+    padding-top: 2px;
 }
 
 .wpaf-color-swatch {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
-    min-width: 48px;
+    padding: 6px;
+    border-radius: 10px;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+    min-width: 52px;
+    position: relative;
 }
 
 .wpaf-color-swatch:hover {
-    background-color: #f5f5f5;
+    background-color: #f5f5f7;
+    transform: translateY(-1px);
 }
 
 .wpaf-color-swatch.wpaf-selected {
-    background-color: #e8e8e8;
+    background-color: #eef1fd;
 }
 
 .wpaf-swatch-circle {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    border: 2px solid #ddd;
+    border: 2.5px solid #e8e8ed;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    position: relative;
+}
+
+.wpaf-color-swatch:hover .wpaf-swatch-circle {
+    border-color: #ccccd6;
 }
 
 .wpaf-color-swatch.wpaf-selected .wpaf-swatch-circle {
-    border-color: #333;
-    box-shadow: 0 0 0 2px #333;
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #4a6cf7;
+    transform: scale(1.05);
+}
+
+/* Checkmark overlay on selected color swatch */
+.wpaf-color-swatch.wpaf-selected .wpaf-swatch-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a6cf7' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: 10px 10px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .wpaf-swatch-text {
     font-size: 11px;
-    font-weight: 600;
-    color: #666;
-    background: #f0f0f0;
+    font-weight: 700;
+    color: #8e8ea0;
+    background: #f0f0f5;
 }
 
 .wpaf-swatch-label {
     font-size: 11px;
-    color: #666;
+    color: #6b6b80;
     text-align: center;
-    max-width: 60px;
+    max-width: 64px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
-/* --- Checkbox Filters --- */
+.wpaf-color-swatch.wpaf-selected .wpaf-swatch-label {
+    color: #4a6cf7;
+    font-weight: 600;
+}
+
+/* === Custom Checkbox Filters === */
 .wpaf-checkbox-list {
     list-style: none;
     margin: 0;
-    padding: 4px 0 0;
+    padding: 2px 0 0;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+}
+
+.wpaf-checkbox-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.wpaf-checkbox-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.wpaf-checkbox-list::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
 }
 
 .wpaf-checkbox-list li {
-    margin-bottom: 6px;
+    margin-bottom: 2px;
 }
 
 .wpaf-checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
-    padding: 4px 0;
+    padding: 8px 8px;
     font-size: 14px;
-    color: #444;
-    transition: color 0.2s ease;
+    color: #3d3d54;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    border-radius: 8px;
+    line-height: 1.3;
+    user-select: none;
 }
 
 .wpaf-checkbox-label:hover {
-    color: #111;
+    background-color: #f5f5f7;
+    color: #1a1a2e;
 }
 
+/* Hide native checkbox */
 .wpaf-checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #333;
-    cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Custom checkmark box */
+.wpaf-checkmark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d0d0da;
+    border-radius: 6px;
+    background: #fff;
     flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wpaf-checkbox-label:hover .wpaf-checkmark {
+    border-color: #b0b0be;
+}
+
+/* Checked state */
+.wpaf-checkbox-label input[type="checkbox"]:checked + .wpaf-checkmark {
+    background: #4a6cf7;
+    border-color: #4a6cf7;
+}
+
+/* Checkmark icon */
+.wpaf-checkmark::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: -1px;
+}
+
+.wpaf-checkbox-label input[type="checkbox"]:checked + .wpaf-checkmark::after {
+    transform: rotate(45deg) scale(1);
+}
+
+/* Focus visible on checkbox */
+.wpaf-checkbox-label input[type="checkbox"]:focus-visible + .wpaf-checkmark {
+    outline: 2px solid #4a6cf7;
+    outline-offset: 2px;
 }
 
 .wpaf-label-text {
     flex: 1;
+    font-weight: 500;
 }
 
 .wpaf-count {
     font-size: 12px;
-    color: #999;
+    color: #b0b0be;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
-/* --- Actions --- */
+/* === Actions === */
 .wpaf-actions {
     display: flex;
     gap: 10px;
-    margin-top: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eaeaea;
 }
 
 .wpaf-apply-filters,
 .wpaf-clear-filters {
     flex: 1;
-    padding: 12px 16px;
+    padding: 13px 18px;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: inherit;
     cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.1s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.01em;
+    line-height: 1.3;
 }
 
 .wpaf-apply-filters {
-    background-color: #333;
+    background: #1a1a2e;
     color: #fff;
+    box-shadow: 0 2px 8px rgba(26, 26, 46, 0.15);
 }
 
 .wpaf-apply-filters:hover {
-    opacity: 0.9;
+    background: #2d2d4a;
+    box-shadow: 0 4px 16px rgba(26, 26, 46, 0.2);
+    transform: translateY(-1px);
 }
 
 .wpaf-apply-filters:active {
-    transform: scale(0.98);
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(26, 26, 46, 0.15);
 }
 
 .wpaf-clear-filters {
-    background-color: #f0f0f0;
-    color: #333;
+    background: transparent;
+    color: #6b6b80;
+    border: 1.5px solid #e2e2e8;
 }
 
 .wpaf-clear-filters:hover {
-    background-color: #e5e5e5;
+    background: #f5f5f7;
+    color: #1a1a2e;
+    border-color: #ccccd6;
 }
 
-/* --- Loading Overlay --- */
+/* === Loading Overlay === */
 .wpaf-loader-overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -268,67 +460,81 @@
 }
 
 .wpaf-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid #e0e0e0;
-    border-top-color: #333;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #eaeaea;
+    border-top-color: #4a6cf7;
     border-radius: 50%;
-    animation: wpaf-spin 0.7s linear infinite;
+    animation: wpaf-spin 0.65s linear infinite;
 }
 
 @keyframes wpaf-spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
-/* --- No Results --- */
+/* === No Results === */
 .wpaf-no-results {
     text-align: center;
-    padding: 40px 20px;
-    color: #666;
+    padding: 48px 24px;
+    color: #8e8ea0;
     font-size: 15px;
+    line-height: 1.6;
 }
 
-/* --- Mobile Trigger Button --- */
+/* === Mobile Trigger Button === */
 .wpaf-mobile-trigger {
     display: none;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #333;
-    color: #fff;
+    padding: 14px 24px;
+    border: 1.5px solid #e2e2e8;
+    border-radius: 12px;
+    background: #fff;
+    color: #1a1a2e;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: inherit;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: all 0.25s ease;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .wpaf-mobile-trigger:hover {
-    opacity: 0.9;
+    background: #f5f5f7;
+    border-color: #ccccd6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.wpaf-mobile-trigger:active {
+    transform: scale(0.98);
 }
 
 .wpaf-mobile-trigger svg {
     flex-shrink: 0;
+    opacity: 0.7;
 }
 
-/* --- Sidebar Header (visible only on mobile) --- */
+/* === Sidebar Header (visible only on mobile) === */
 .wpaf-sidebar-header {
     display: none;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eaeaea;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 .wpaf-sidebar-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #333;
+    font-size: 18px;
+    font-weight: 800;
+    color: #1a1a2e;
+    letter-spacing: -0.01em;
 }
 
 .wpaf-sidebar-close {
@@ -338,17 +544,20 @@
     width: 36px;
     height: 36px;
     border: none;
-    background: #f0f0f0;
+    background: #f5f5f7;
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    color: #6b6b80;
 }
 
 .wpaf-sidebar-close:hover {
-    background-color: #e0e0e0;
+    background: #ededf0;
+    color: #1a1a2e;
+    transform: rotate(90deg);
 }
 
-/* --- Overlay --- */
+/* === Overlay === */
 .wpaf-sidebar-overlay {
     display: none;
     position: fixed;
@@ -356,17 +565,18 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
     z-index: 999998;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
 }
 
 .wpaf-sidebar-overlay.wpaf-overlay-visible {
     opacity: 1;
 }
 
-/* --- Body lock when sidebar is active --- */
+/* === Body lock when sidebar is active === */
 body.wpaf-sidebar-active {
     overflow: hidden;
 }
@@ -390,25 +600,32 @@ body.rtl .wpaf-price-inputs {
     flex-direction: row-reverse;
 }
 
+[dir="rtl"] .wpaf-active-count,
+body.rtl .wpaf-active-count {
+    margin-inline-start: 8px;
+    margin-inline-end: 0;
+}
+
 /* ========================================
    Mobile Styles (max-width: 767px)
    ======================================== */
 @media (max-width: 767px) {
 
-    /* Hide desktop filters, show mobile trigger */
     .wpaf-filters-wrapper {
         position: fixed;
         top: 0;
         right: -100%;
-        width: 85%;
-        max-width: 380px;
+        width: 88%;
+        max-width: 400px;
         height: 100%;
+        height: 100dvh;
         background: #fff;
         z-index: 999999;
         overflow-y: auto;
-        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-        padding-bottom: 20px;
+        -webkit-overflow-scrolling: touch;
+        transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+        padding-bottom: 100px;
     }
 
     /* RTL: slide from left */
@@ -416,8 +633,8 @@ body.rtl .wpaf-price-inputs {
     body.rtl .wpaf-filters-wrapper {
         right: auto;
         left: -100%;
-        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: left 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        box-shadow: 8px 0 30px rgba(0, 0, 0, 0.12);
     }
 
     .wpaf-filters-wrapper.wpaf-sidebar-open {
@@ -443,17 +660,33 @@ body.rtl .wpaf-price-inputs {
     }
 
     .wpaf-accordion {
-        padding: 12px 16px 0;
+        padding: 4px 20px 0;
+    }
+
+    .wpaf-accordion-header {
+        padding: 16px 2px;
+    }
+
+    .wpaf-accordion-body {
+        padding: 0 2px 18px;
     }
 
     .wpaf-actions {
-        padding: 0 16px;
-        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px 24px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
+        background: #fff;
+        border-top: 1px solid #eaeaea;
+        margin-top: 0;
+        z-index: 3;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
     }
 
-    .wpaf-apply-filters,
-    .wpaf-clear-filters {
-        padding: 14px 16px;
+    .wpaf-checkbox-list {
+        max-height: none;
     }
 }
 
@@ -462,7 +695,28 @@ body.rtl .wpaf-price-inputs {
    ======================================== */
 @media (min-width: 768px) and (max-width: 1024px) {
     .wpaf-accordion-header {
-        padding: 12px 14px;
+        padding: 16px 4px;
         font-size: 14px;
+    }
+
+    .wpaf-accordion-body {
+        padding: 0 4px 16px;
+    }
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    .wpaf-accordion-arrow,
+    .wpaf-filters-wrapper,
+    .wpaf-sidebar-overlay,
+    .wpaf-sidebar-close:hover,
+    .wpaf-color-swatch,
+    .wpaf-apply-filters,
+    .wpaf-checkmark,
+    .wpaf-checkmark::after {
+        transition: none !important;
+        animation: none !important;
     }
 }
