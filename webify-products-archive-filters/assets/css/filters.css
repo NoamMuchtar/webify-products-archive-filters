@@ -172,109 +172,6 @@
     font-weight: 300;
 }
 
-/* === Color Swatches === */
-.wpaf-color-swatches {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 40px);
-    gap: 12px;
-    padding-top: 4px;
-}
-
-.wpaf-color-swatch {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-}
-
-.wpaf-swatch-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid #e0e0e0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-}
-
-.wpaf-color-swatch:hover .wpaf-swatch-circle {
-    border-color: #1a1a2e;
-}
-
-.wpaf-color-swatch.wpaf-selected .wpaf-swatch-circle {
-    border-color: #1a1a2e;
-    box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #1a1a2e;
-}
-
-/* Checkmark overlay on selected color swatch */
-.wpaf-color-swatch.wpaf-selected .wpaf-swatch-circle::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 16px;
-    height: 16px;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 50%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1a2e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-    background-size: 10px 10px;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-/* Image-based color swatch */
-.wpaf-swatch-circle img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.wpaf-swatch-text {
-    font-size: 11px;
-    font-weight: 700;
-    color: #8e8ea0;
-    background: #f0f0f5;
-}
-
-/* Tooltip label on hover */
-.wpaf-swatch-label {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 11px;
-    color: #fff;
-    background: #1a1a2e;
-    padding: 4px 8px;
-    border-radius: 4px;
-    white-space: nowrap;
-    font-weight: 500;
-    line-height: 1.2;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    z-index: 5;
-}
-
-.wpaf-swatch-label::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #1a1a2e;
-}
-
-.wpaf-color-swatch:hover .wpaf-swatch-label {
-    opacity: 1;
-}
-
 /* === Custom Checkbox Filters === */
 .wpaf-checkbox-list {
     list-style: none;
@@ -712,8 +609,6 @@ body.rtl .wpaf-active-count {
     .wpaf-filters-wrapper,
     .wpaf-sidebar-overlay,
     .wpaf-sidebar-close,
-    .wpaf-swatch-circle,
-    .wpaf-swatch-label,
     .wpaf-apply-filters,
     .wpaf-checkmark,
     .wpaf-checkmark::after {

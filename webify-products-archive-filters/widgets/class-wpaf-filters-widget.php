@@ -410,7 +410,7 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                                     $this->render_price_filter( $current_min, $current_max );
                                     break;
                                 case 'color':
-                                    $this->render_color_filter( $filter );
+                                    $this->render_checkbox_filter( $filter, 'color' );
                                     break;
                                 case 'brand':
                                     $this->render_checkbox_filter( $filter, 'brand' );
@@ -456,102 +456,6 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
             </div>
         </div>
         <?php
-    }
-
-    /**
-     * Render color filter as swatches with color circles or images.
-     */
-    private function render_color_filter( $filter ) {
-        $active_terms = isset( $_GET[ 'filter_' . $filter['slug'] ] )
-            ? array_map( 'sanitize_text_field', explode( ',', $_GET[ 'filter_' . $filter['slug'] ] ) )
-            : [];
-        ?>
-        <div class="wpaf-color-filter" data-filter-type="color" data-taxonomy="<?php echo esc_attr( $filter['slug'] ); ?>">
-            <div class="wpaf-color-swatches">
-                <?php foreach ( $filter['terms'] as $term ) :
-                    $swatch = $this->get_term_swatch_data( $term->term_id );
-                    $is_active = in_array( $term->slug, $active_terms, true );
-                    ?>
-                    <label class="wpaf-color-swatch<?php echo $is_active ? ' wpaf-selected' : ''; ?>" title="<?php echo esc_attr( $term->name ); ?>">
-                        <input type="checkbox" name="filter_color[]" value="<?php echo esc_attr( $term->slug ); ?>" <?php checked( $is_active ); ?> hidden>
-                        <?php if ( 'image' === $swatch['type'] ) : ?>
-                            <span class="wpaf-swatch-circle"><img src="<?php echo esc_url( $swatch['value'] ); ?>" alt="<?php echo esc_attr( $term->name ); ?>"></span>
-                        <?php elseif ( 'color' === $swatch['type'] ) : ?>
-                            <span class="wpaf-swatch-circle" style="background-color: <?php echo esc_attr( $swatch['value'] ); ?>;"></span>
-                        <?php else : ?>
-                            <span class="wpaf-swatch-circle wpaf-swatch-text"><?php echo esc_html( mb_substr( $term->name, 0, 2 ) ); ?></span>
-                        <?php endif; ?>
-                        <span class="wpaf-swatch-label"><?php echo esc_html( $term->name ); ?></span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php
-    }
-
-    /**
-     * Get swatch display data (color or image) for a term.
-     *
-     * Supports multiple popular WooCommerce variation-swatch plugins:
-     * - Variation Swatches for WooCommerce (by Emran Ahmed / getwooplugins)
-     * - suspended Starter Sites / flavor-based plugins
-     * - WooCommerce Variation Swatches (by CartFlows)
-     * - Custom term meta stored by theme or other plugins
-     *
-     * @param int $term_id Term ID.
-     * @return array { type: 'color'|'image'|'none', value: string }
-     */
-    private function get_term_swatch_data( $term_id ) {
-        // --- Try image meta keys first (image takes priority) ---
-        $image_meta_keys = [
-            'product_attribute_image',    // Variation Swatches for WooCommerce (Emran Ahmed)
-            'image',                      // Generic
-            'pa_image',                   // Some themes
-            'attribute_swatch_image',     // Flavor-based plugins
-            'swatch_image',              // Some plugins
-        ];
-
-        foreach ( $image_meta_keys as $key ) {
-            $value = get_term_meta( $term_id, $key, true );
-            if ( ! empty( $value ) ) {
-                // Could be an attachment ID or a URL
-                if ( is_numeric( $value ) ) {
-                    $url = wp_get_attachment_image_url( (int) $value, 'thumbnail' );
-                    if ( $url ) {
-                        return [ 'type' => 'image', 'value' => $url ];
-                    }
-                } elseif ( filter_var( $value, FILTER_VALIDATE_URL ) ) {
-                    return [ 'type' => 'image', 'value' => $value ];
-                }
-            }
-        }
-
-        // --- Try color meta keys ---
-        $color_meta_keys = [
-            'product_attribute_color',    // Variation Swatches for WooCommerce (Emran Ahmed)
-            'color',                      // Generic / many themes
-            'pa_color',                   // Some themes
-            'attribute_swatch_color',     // Flavor-based plugins
-            'swatch_color',              // Some plugins
-            'term_color',                 // Some themes
-            '_woosw_color',              // WooSwatches
-        ];
-
-        foreach ( $color_meta_keys as $key ) {
-            $value = get_term_meta( $term_id, $key, true );
-            if ( ! empty( $value ) ) {
-                // Normalize: ensure it starts with #
-                if ( preg_match( '/^#?([0-9a-fA-F]{3,8})$/', $value, $m ) ) {
-                    return [ 'type' => 'color', 'value' => '#' . $m[1] ];
-                }
-                // Also accept named CSS colors or rgb/rgba
-                if ( preg_match( '/^(rgb|hsl)/i', $value ) || preg_match( '/^[a-zA-Z]+$/', $value ) ) {
-                    return [ 'type' => 'color', 'value' => $value ];
-                }
-            }
-        }
-
-        return [ 'type' => 'none', 'value' => '' ];
     }
 
     /**
