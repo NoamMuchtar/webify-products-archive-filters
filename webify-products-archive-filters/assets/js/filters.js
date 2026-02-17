@@ -3,6 +3,7 @@
 
     var WPAF = {
         isLoading: false,
+        priceDebounceTimer: null,
 
         init: function () {
             this.cacheDOM();
@@ -15,8 +16,6 @@
         cacheDOM: function () {
             this.$wrapper = $('.wpaf-filters-wrapper');
             this.$accordion = this.$wrapper.find('.wpaf-accordion');
-            this.$applyBtn = this.$wrapper.find('.wpaf-apply-filters');
-            this.$clearBtn = this.$wrapper.find('.wpaf-clear-filters');
             this.$mobileTrigger = $('.wpaf-mobile-trigger');
             this.$overlay = $('.wpaf-sidebar-overlay');
             this.$closeBtn = this.$wrapper.find('.wpaf-sidebar-close');
@@ -35,19 +34,10 @@
             // Accordion toggle
             this.$accordion.on('click', '.wpaf-accordion-header', this.toggleAccordion.bind(this));
 
-            // Apply filters
-            this.$applyBtn.on('click', function () { self.applyFilters(1); });
-
-            // Clear filters
-            this.$clearBtn.on('click', this.clearFilters.bind(this));
-
             // Mobile sidebar
             this.$mobileTrigger.on('click', this.openSidebar.bind(this));
             this.$closeBtn.on('click', this.closeSidebar.bind(this));
             this.$overlay.on('click', this.closeSidebar.bind(this));
-
-            // Color swatch toggle
-            this.$wrapper.on('click', '.wpaf-color-swatch', this.toggleColorSwatch.bind(this));
 
             // Handle pagination clicks on AJAX-loaded pagination
             $(document).on('click', '.woocommerce-pagination a', this.handlePagination.bind(this));
@@ -59,14 +49,19 @@
                 }
             });
 
-            // Update badge when checkboxes change
+            // Auto-apply on checkbox change
             this.$wrapper.on('change', 'input[type="checkbox"]', function () {
                 self.updateActiveCountBadge();
+                self.applyFilters(1);
             });
 
-            // Update badge when price changes
+            // Auto-apply on price change (debounced)
             this.$wrapper.on('input', '.wpaf-price-input', function () {
                 self.updateActiveCountBadge();
+                clearTimeout(self.priceDebounceTimer);
+                self.priceDebounceTimer = setTimeout(function () {
+                    self.applyFilters(1);
+                }, 600);
             });
         },
 
@@ -85,15 +80,6 @@
                 $header.attr('aria-expanded', 'true');
                 $body.slideDown(280);
             }
-        },
-
-        toggleColorSwatch: function (e) {
-            e.preventDefault();
-            var $swatch = $(e.currentTarget);
-            var $checkbox = $swatch.find('input[type="checkbox"]');
-            var isChecked = $checkbox.prop('checked');
-            $checkbox.prop('checked', !isChecked).trigger('change');
-            $swatch.toggleClass('wpaf-selected');
         },
 
         openSidebar: function () {
@@ -149,19 +135,7 @@
             if (minPrice) data.min_price = minPrice;
             if (maxPrice) data.max_price = maxPrice;
 
-            // Color filter
-            this.$wrapper.find('.wpaf-color-filter').each(function () {
-                var taxonomy = $(this).data('taxonomy');
-                var selected = [];
-                $(this).find('input[type="checkbox"]:checked').each(function () {
-                    selected.push($(this).val());
-                });
-                if (selected.length) {
-                    data.filters[taxonomy] = selected;
-                }
-            });
-
-            // Checkbox filters (brands & attributes)
+            // Checkbox filters (colors, brands & attributes)
             this.$wrapper.find('.wpaf-checkbox-filter').each(function () {
                 var taxonomy = $(this).data('taxonomy');
                 var selected = [];
@@ -256,23 +230,6 @@
             });
         },
 
-        clearFilters: function () {
-            // Clear price inputs
-            this.$wrapper.find('input[name="min_price"], input[name="max_price"]').val('');
-
-            // Uncheck all checkboxes
-            this.$wrapper.find('input[type="checkbox"]').prop('checked', false);
-
-            // Remove selected state from swatches
-            this.$wrapper.find('.wpaf-color-swatch').removeClass('wpaf-selected');
-
-            // Update count
-            this.updateActiveCountBadge();
-
-            // Apply cleared filters
-            this.applyFilters(1);
-        },
-
         handlePagination: function (e) {
             e.preventDefault();
             var href = $(e.currentTarget).attr('href');
@@ -318,7 +275,6 @@
 
         restoreFromURL: function () {
             var params = new URLSearchParams(window.location.search);
-            var self = this;
 
             // Restore price
             if (params.has('min_price')) {
@@ -329,20 +285,13 @@
             }
 
             // Restore taxonomy filters from URL
+            var self = this;
             params.forEach(function (value, key) {
                 if (key.indexOf('filter_') === 0) {
                     var taxonomy = key.replace('filter_', '');
                     var slugs = value.split(',');
 
                     slugs.forEach(function (slug) {
-                        // Color swatches
-                        var $colorInput = self.$wrapper.find('.wpaf-color-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
-                        if ($colorInput.length) {
-                            $colorInput.prop('checked', true);
-                            $colorInput.closest('.wpaf-color-swatch').addClass('wpaf-selected');
-                        }
-
-                        // Checkbox filters
                         var $checkInput = self.$wrapper.find('.wpaf-checkbox-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
                         if ($checkInput.length) {
                             $checkInput.prop('checked', true);

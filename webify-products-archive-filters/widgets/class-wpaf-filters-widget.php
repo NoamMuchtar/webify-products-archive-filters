@@ -222,31 +222,6 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
-        // === Style: Apply Button ===
-        $this->start_controls_section( 'section_style_apply_btn', [
-            'label' => esc_html__( 'Apply Button', 'webify-products-archive-filters' ),
-            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-        ] );
-
-        $this->add_control( 'apply_btn_bg', [
-            'label'     => esc_html__( 'Background Color', 'webify-products-archive-filters' ),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#333333',
-            'selectors' => [
-                '{{WRAPPER}} .wpaf-apply-filters' => 'background-color: {{VALUE}};',
-            ],
-        ] );
-
-        $this->add_control( 'apply_btn_color', [
-            'label'     => esc_html__( 'Text Color', 'webify-products-archive-filters' ),
-            'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#ffffff',
-            'selectors' => [
-                '{{WRAPPER}} .wpaf-apply-filters' => 'color: {{VALUE}};',
-            ],
-        ] );
-
-        $this->end_controls_section();
     }
 
     protected function render() {
@@ -425,13 +400,6 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                 <?php endforeach; ?>
             </div>
 
-            <div class="wpaf-actions">
-                <button type="button" class="wpaf-apply-filters">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-inline-end: 4px;"><polyline points="20 6 9 17 4 12"/></svg>
-                    <?php esc_html_e( 'החל סינון', 'webify-products-archive-filters' ); ?>
-                </button>
-                <button type="button" class="wpaf-clear-filters"><?php esc_html_e( 'נקה הכל', 'webify-products-archive-filters' ); ?></button>
-            </div>
         </div>
         <?php
     }
