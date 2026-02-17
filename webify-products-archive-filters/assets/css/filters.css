@@ -1,0 +1,468 @@
+/* ========================================
+   Webify Products Archive Filters
+   ======================================== */
+
+/* --- Accordion --- */
+.wpaf-accordion {
+    width: 100%;
+}
+
+.wpaf-accordion-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.wpaf-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    text-align: right;
+    transition: background-color 0.2s ease;
+}
+
+.wpaf-accordion-header:hover {
+    background-color: #f7f7f7;
+}
+
+.wpaf-accordion-arrow {
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.wpaf-accordion-item.wpaf-active .wpaf-accordion-arrow {
+    transform: rotate(180deg);
+}
+
+.wpaf-accordion-body {
+    padding: 0 16px 16px;
+}
+
+/* --- Price Filter --- */
+.wpaf-price-filter {
+    padding-top: 4px;
+}
+
+.wpaf-price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wpaf-price-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wpaf-price-field label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.wpaf-price-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -moz-appearance: textfield;
+}
+
+.wpaf-price-input::-webkit-outer-spin-button,
+.wpaf-price-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.wpaf-price-input:focus {
+    border-color: #333;
+}
+
+.wpaf-price-separator {
+    font-size: 16px;
+    color: #999;
+    padding-top: 22px;
+}
+
+/* --- Color Swatches --- */
+.wpaf-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.wpaf-color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    min-width: 48px;
+}
+
+.wpaf-color-swatch:hover {
+    background-color: #f5f5f5;
+}
+
+.wpaf-color-swatch.wpaf-selected {
+    background-color: #e8e8e8;
+}
+
+.wpaf-swatch-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wpaf-color-swatch.wpaf-selected .wpaf-swatch-circle {
+    border-color: #333;
+    box-shadow: 0 0 0 2px #333;
+}
+
+.wpaf-swatch-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    background: #f0f0f0;
+}
+
+.wpaf-swatch-label {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- Checkbox Filters --- */
+.wpaf-checkbox-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0 0;
+}
+
+.wpaf-checkbox-list li {
+    margin-bottom: 6px;
+}
+
+.wpaf-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+    color: #444;
+    transition: color 0.2s ease;
+}
+
+.wpaf-checkbox-label:hover {
+    color: #111;
+}
+
+.wpaf-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #333;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.wpaf-label-text {
+    flex: 1;
+}
+
+.wpaf-count {
+    font-size: 12px;
+    color: #999;
+}
+
+/* --- Actions --- */
+.wpaf-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.wpaf-apply-filters,
+.wpaf-clear-filters {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.wpaf-apply-filters {
+    background-color: #333;
+    color: #fff;
+}
+
+.wpaf-apply-filters:hover {
+    opacity: 0.9;
+}
+
+.wpaf-apply-filters:active {
+    transform: scale(0.98);
+}
+
+.wpaf-clear-filters {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.wpaf-clear-filters:hover {
+    background-color: #e5e5e5;
+}
+
+/* --- Loading Overlay --- */
+.wpaf-loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.wpaf-loader-overlay.wpaf-loading {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.wpaf-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: wpaf-spin 0.7s linear infinite;
+}
+
+@keyframes wpaf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- No Results --- */
+.wpaf-no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 15px;
+}
+
+/* --- Mobile Trigger Button --- */
+.wpaf-mobile-trigger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #333;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.wpaf-mobile-trigger:hover {
+    opacity: 0.9;
+}
+
+.wpaf-mobile-trigger svg {
+    flex-shrink: 0;
+}
+
+/* --- Sidebar Header (visible only on mobile) --- */
+.wpaf-sidebar-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.wpaf-sidebar-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #333;
+}
+
+.wpaf-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f0f0f0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.wpaf-sidebar-close:hover {
+    background-color: #e0e0e0;
+}
+
+/* --- Overlay --- */
+.wpaf-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.wpaf-sidebar-overlay.wpaf-overlay-visible {
+    opacity: 1;
+}
+
+/* --- Body lock when sidebar is active --- */
+body.wpaf-sidebar-active {
+    overflow: hidden;
+}
+
+/* ========================================
+   RTL Support
+   ======================================== */
+[dir="rtl"] .wpaf-accordion-header,
+body.rtl .wpaf-accordion-header {
+    text-align: right;
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .wpaf-checkbox-label,
+body.rtl .wpaf-checkbox-label {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .wpaf-price-inputs,
+body.rtl .wpaf-price-inputs {
+    flex-direction: row-reverse;
+}
+
+/* ========================================
+   Mobile Styles (max-width: 767px)
+   ======================================== */
+@media (max-width: 767px) {
+
+    /* Hide desktop filters, show mobile trigger */
+    .wpaf-filters-wrapper {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 85%;
+        max-width: 380px;
+        height: 100%;
+        background: #fff;
+        z-index: 999999;
+        overflow-y: auto;
+        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        padding-bottom: 20px;
+    }
+
+    /* RTL: slide from left */
+    [dir="rtl"] .wpaf-filters-wrapper,
+    body.rtl .wpaf-filters-wrapper {
+        right: auto;
+        left: -100%;
+        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .wpaf-filters-wrapper.wpaf-sidebar-open {
+        right: 0;
+    }
+
+    [dir="rtl"] .wpaf-filters-wrapper.wpaf-sidebar-open,
+    body.rtl .wpaf-filters-wrapper.wpaf-sidebar-open {
+        right: auto;
+        left: 0;
+    }
+
+    .wpaf-mobile-trigger {
+        display: flex;
+    }
+
+    .wpaf-sidebar-header {
+        display: flex;
+    }
+
+    .wpaf-sidebar-overlay {
+        display: block;
+    }
+
+    .wpaf-accordion {
+        padding: 12px 16px 0;
+    }
+
+    .wpaf-actions {
+        padding: 0 16px;
+        flex-direction: column;
+    }
+
+    .wpaf-apply-filters,
+    .wpaf-clear-filters {
+        padding: 14px 16px;
+    }
+}
+
+/* ========================================
+   Tablet (768px - 1024px)
+   ======================================== */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .wpaf-accordion-header {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+}
