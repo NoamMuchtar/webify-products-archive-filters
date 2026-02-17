@@ -224,7 +224,6 @@
                 complete: function () {
                     self.isLoading = false;
                     self.hideLoader();
-                    self.closeSidebar();
                     self.updateActiveCountBadge();
                 }
             });

@@ -432,11 +432,13 @@
     background: rgba(0, 0, 0, 0.4);
     z-index: 999998;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s ease;
 }
 
 .wpaf-sidebar-overlay.wpaf-overlay-visible {
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* === Body lock when sidebar is active === */
