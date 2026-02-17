@@ -33,6 +33,12 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
             'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
         ] );
 
+        $this->add_control( 'filters_title', [
+            'label'   => esc_html__( 'Filters Title', 'webify-products-archive-filters' ),
+            'type'    => \Elementor\Controls_Manager::TEXT,
+            'default' => esc_html__( 'סינונים', 'webify-products-archive-filters' ),
+        ] );
+
         $this->add_control( 'show_price_filter', [
             'label'        => esc_html__( 'Price Filter', 'webify-products-archive-filters' ),
             'type'         => \Elementor\Controls_Manager::SWITCHER,
@@ -115,10 +121,25 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
             'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
         ] );
 
+        $this->add_control( 'title_color', [
+            'label'     => esc_html__( 'Title Color', 'webify-products-archive-filters' ),
+            'type'      => \Elementor\Controls_Manager::COLOR,
+            'default'   => '#1a1a2e',
+            'selectors' => [
+                '{{WRAPPER}} .wpaf-filters-title' => 'color: {{VALUE}};',
+            ],
+        ] );
+
+        $this->add_group_control( \Elementor\Group_Control_Typography::get_type(), [
+            'name'     => 'title_typography',
+            'label'    => esc_html__( 'Title Typography', 'webify-products-archive-filters' ),
+            'selector' => '{{WRAPPER}} .wpaf-filters-title',
+        ] );
+
         $this->add_control( 'heading_color', [
             'label'     => esc_html__( 'Heading Color', 'webify-products-archive-filters' ),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#333333',
+            'default'   => '#1a1a2e',
             'selectors' => [
                 '{{WRAPPER}} .wpaf-accordion-header' => 'color: {{VALUE}};',
             ],
@@ -131,11 +152,12 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
         ] );
 
         $this->add_control( 'border_color', [
-            'label'     => esc_html__( 'Border Color', 'webify-products-archive-filters' ),
+            'label'     => esc_html__( 'Divider Color', 'webify-products-archive-filters' ),
             'type'      => \Elementor\Controls_Manager::COLOR,
-            'default'   => '#e0e0e0',
+            'default'   => '#eaeaea',
             'selectors' => [
                 '{{WRAPPER}} .wpaf-accordion-item' => 'border-color: {{VALUE}};',
+                '{{WRAPPER}} .wpaf-filters-title' => 'border-color: {{VALUE}};',
             ],
         ] );
 
@@ -368,6 +390,10 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                 </button>
             </div>
 
+            <?php if ( ! empty( $settings['filters_title'] ) ) : ?>
+                <h3 class="wpaf-filters-title"><?php echo esc_html( $settings['filters_title'] ); ?></h3>
+            <?php endif; ?>
+
             <div class="wpaf-accordion">
                 <?php foreach ( $filters as $index => $filter ) : ?>
                     <div class="wpaf-accordion-item<?php echo 0 === $index ? ' wpaf-active' : ''; ?>">
@@ -433,7 +459,7 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
     }
 
     /**
-     * Render color filter as swatches.
+     * Render color filter as swatches with color circles or images.
      */
     private function render_color_filter( $filter ) {
         $active_terms = isset( $_GET[ 'filter_' . $filter['slug'] ] )
@@ -443,16 +469,15 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
         <div class="wpaf-color-filter" data-filter-type="color" data-taxonomy="<?php echo esc_attr( $filter['slug'] ); ?>">
             <div class="wpaf-color-swatches">
                 <?php foreach ( $filter['terms'] as $term ) :
-                    $color_value = get_term_meta( $term->term_id, 'color', true );
-                    if ( empty( $color_value ) ) {
-                        $color_value = get_term_meta( $term->term_id, 'product_attribute_color', true );
-                    }
+                    $swatch = $this->get_term_swatch_data( $term->term_id );
                     $is_active = in_array( $term->slug, $active_terms, true );
                     ?>
                     <label class="wpaf-color-swatch<?php echo $is_active ? ' wpaf-selected' : ''; ?>" title="<?php echo esc_attr( $term->name ); ?>">
                         <input type="checkbox" name="filter_color[]" value="<?php echo esc_attr( $term->slug ); ?>" <?php checked( $is_active ); ?> hidden>
-                        <?php if ( ! empty( $color_value ) ) : ?>
-                            <span class="wpaf-swatch-circle" style="background-color: <?php echo esc_attr( $color_value ); ?>;"></span>
+                        <?php if ( 'image' === $swatch['type'] ) : ?>
+                            <span class="wpaf-swatch-circle"><img src="<?php echo esc_url( $swatch['value'] ); ?>" alt="<?php echo esc_attr( $term->name ); ?>"></span>
+                        <?php elseif ( 'color' === $swatch['type'] ) : ?>
+                            <span class="wpaf-swatch-circle" style="background-color: <?php echo esc_attr( $swatch['value'] ); ?>;"></span>
                         <?php else : ?>
                             <span class="wpaf-swatch-circle wpaf-swatch-text"><?php echo esc_html( mb_substr( $term->name, 0, 2 ) ); ?></span>
                         <?php endif; ?>
@@ -462,6 +487,71 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Get swatch display data (color or image) for a term.
+     *
+     * Supports multiple popular WooCommerce variation-swatch plugins:
+     * - Variation Swatches for WooCommerce (by Emran Ahmed / getwooplugins)
+     * - suspended Starter Sites / flavor-based plugins
+     * - WooCommerce Variation Swatches (by CartFlows)
+     * - Custom term meta stored by theme or other plugins
+     *
+     * @param int $term_id Term ID.
+     * @return array { type: 'color'|'image'|'none', value: string }
+     */
+    private function get_term_swatch_data( $term_id ) {
+        // --- Try image meta keys first (image takes priority) ---
+        $image_meta_keys = [
+            'product_attribute_image',    // Variation Swatches for WooCommerce (Emran Ahmed)
+            'image',                      // Generic
+            'pa_image',                   // Some themes
+            'attribute_swatch_image',     // Flavor-based plugins
+            'swatch_image',              // Some plugins
+        ];
+
+        foreach ( $image_meta_keys as $key ) {
+            $value = get_term_meta( $term_id, $key, true );
+            if ( ! empty( $value ) ) {
+                // Could be an attachment ID or a URL
+                if ( is_numeric( $value ) ) {
+                    $url = wp_get_attachment_image_url( (int) $value, 'thumbnail' );
+                    if ( $url ) {
+                        return [ 'type' => 'image', 'value' => $url ];
+                    }
+                } elseif ( filter_var( $value, FILTER_VALIDATE_URL ) ) {
+                    return [ 'type' => 'image', 'value' => $value ];
+                }
+            }
+        }
+
+        // --- Try color meta keys ---
+        $color_meta_keys = [
+            'product_attribute_color',    // Variation Swatches for WooCommerce (Emran Ahmed)
+            'color',                      // Generic / many themes
+            'pa_color',                   // Some themes
+            'attribute_swatch_color',     // Flavor-based plugins
+            'swatch_color',              // Some plugins
+            'term_color',                 // Some themes
+            '_woosw_color',              // WooSwatches
+        ];
+
+        foreach ( $color_meta_keys as $key ) {
+            $value = get_term_meta( $term_id, $key, true );
+            if ( ! empty( $value ) ) {
+                // Normalize: ensure it starts with #
+                if ( preg_match( '/^#?([0-9a-fA-F]{3,8})$/', $value, $m ) ) {
+                    return [ 'type' => 'color', 'value' => '#' . $m[1] ];
+                }
+                // Also accept named CSS colors or rgb/rgba
+                if ( preg_match( '/^(rgb|hsl)/i', $value ) || preg_match( '/^[a-zA-Z]+$/', $value ) ) {
+                    return [ 'type' => 'color', 'value' => $value ];
+                }
+            }
+        }
+
+        return [ 'type' => 'none', 'value' => '' ];
     }
 
     /**
