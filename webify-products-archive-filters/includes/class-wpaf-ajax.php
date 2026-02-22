@@ -63,28 +63,25 @@ class WPAF_Ajax {
 
             woocommerce_product_loop_end();
         } else {
-            echo '<div class="wpaf-no-results">';
+            echo '<li class="wpaf-no-results-item" style="list-style:none;grid-column:1/-1;text-align:center;padding:48px 24px;color:#8e8ea0;font-size:15px;">';
             echo '<p>' . esc_html__( 'לא נמצאו מוצרים התואמים לסינון שבחרת.', 'webify-products-archive-filters' ) . '</p>';
-            echo '</div>';
+            echo '</li>';
         }
 
         $html = ob_get_clean();
 
-        // Pagination
-        ob_start();
+        // Pagination — only inner links, JS will inject into existing wrapper
         $total_pages = $query->max_num_pages;
+        $pagination  = '';
         if ( $total_pages > 1 ) {
-            echo '<nav class="woocommerce-pagination">';
-            echo paginate_links( [
-                'total'   => $total_pages,
-                'current' => $params['paged'],
-                'format'  => '?paged=%#%',
+            $pagination = '<nav class="woocommerce-pagination">' . paginate_links( [
+                'total'     => $total_pages,
+                'current'   => $params['paged'],
+                'format'    => '?paged=%#%',
                 'prev_text' => '&laquo;',
                 'next_text' => '&raquo;',
-            ] );
-            echo '</nav>';
+            ] ) . '</nav>';
         }
-        $pagination = ob_get_clean();
 
         wp_reset_postdata();
 

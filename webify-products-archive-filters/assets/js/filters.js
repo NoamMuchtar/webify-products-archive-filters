@@ -20,11 +20,13 @@
             this.$overlay = $('.wpaf-sidebar-overlay');
             this.$closeBtn = this.$wrapper.find('.wpaf-sidebar-close');
             this.$productsContainer = null;
+            this.$productsList = null;
 
             // Find the products container (Elementor archive products widget)
             var $products = $('.products');
             if ($products.length) {
-                this.$productsContainer = $products.first().parent();
+                this.$productsList = $products.first();
+                this.$productsContainer = this.$productsList.parent();
             }
         },
 
@@ -178,35 +180,25 @@
                 type: 'POST',
                 data: ajaxData,
                 success: function (response) {
-                    if (response.success && self.$productsContainer) {
+                    if (response.success && self.$productsList) {
                         // Fade out the products area
                         self.$productsContainer.css('opacity', '0.3');
 
                         setTimeout(function () {
-                            var $existingProducts = self.$productsContainer.find('.products');
-                            var $existingNoResults = self.$productsContainer.find('.wpaf-no-results');
+                            // Parse new product items from response
                             var $newContent = $(response.data.html);
+                            var newInner;
 
                             if ($newContent.hasClass('products')) {
-                                // Response is a products list — extract inner <li> items
-                                if ($existingProducts.length) {
-                                    // Preserve the original <ul> with its classes, replace only the children
-                                    $existingProducts.first().html($newContent.html());
-                                    $existingNoResults.remove();
-                                } else {
-                                    // Was showing no-results, now we have products
-                                    $existingNoResults.replaceWith(response.data.html);
-                                }
+                                // Response wrapped in <ul class="products"> — extract children
+                                newInner = $newContent.html();
                             } else {
-                                // Response is no-results div
-                                if ($existingProducts.length) {
-                                    $existingProducts.first().replaceWith(response.data.html);
-                                } else if ($existingNoResults.length) {
-                                    $existingNoResults.first().replaceWith(response.data.html);
-                                } else {
-                                    self.$productsContainer.append(response.data.html);
-                                }
+                                // No-results or raw items — use as-is
+                                newInner = response.data.html;
                             }
+
+                            // Always inject into existing .products, preserving wrapper classes
+                            self.$productsList.html(newInner).show();
 
                             // Fade in
                             self.$productsContainer.css({
@@ -216,19 +208,19 @@
                             self.$productsContainer[0].offsetHeight;
                             self.$productsContainer.css('opacity', '1');
 
-                            // Update pagination
-                            var $existingPagination = self.$productsContainer.find('.woocommerce-pagination');
-                            if (!$existingPagination.length) {
-                                $existingPagination = self.$productsContainer.next('.woocommerce-pagination');
-                            }
-                            if ($existingPagination.length) {
-                                if (response.data.pagination) {
-                                    $existingPagination.replaceWith(response.data.pagination);
+                            // Update pagination — only inner links, preserve the wrapper element
+                            var $existingPagination = $('.woocommerce-pagination');
+                            if (response.data.pagination) {
+                                var $newPagination = $(response.data.pagination);
+                                if ($existingPagination.length) {
+                                    // Preserve wrapper, update only inner links
+                                    $existingPagination.first().html($newPagination.html());
+                                    $existingPagination.first().show();
                                 } else {
-                                    $existingPagination.remove();
+                                    self.$productsContainer.after(response.data.pagination);
                                 }
-                            } else if (response.data.pagination) {
-                                self.$productsContainer.append(response.data.pagination);
+                            } else {
+                                $existingPagination.hide();
                             }
 
                             // Update product count if visible
