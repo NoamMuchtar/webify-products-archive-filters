@@ -183,12 +183,29 @@
                         self.$productsContainer.css('opacity', '0.3');
 
                         setTimeout(function () {
-                            // Replace only the products list or no-results, not the entire parent
-                            var $existing = self.$productsContainer.find('.products, .wpaf-no-results');
-                            if ($existing.length) {
-                                $existing.first().replaceWith(response.data.html);
+                            var $existingProducts = self.$productsContainer.find('.products');
+                            var $existingNoResults = self.$productsContainer.find('.wpaf-no-results');
+                            var $newContent = $(response.data.html);
+
+                            if ($newContent.hasClass('products')) {
+                                // Response is a products list — extract inner <li> items
+                                if ($existingProducts.length) {
+                                    // Preserve the original <ul> with its classes, replace only the children
+                                    $existingProducts.first().html($newContent.html());
+                                    $existingNoResults.remove();
+                                } else {
+                                    // Was showing no-results, now we have products
+                                    $existingNoResults.replaceWith(response.data.html);
+                                }
                             } else {
-                                self.$productsContainer.append(response.data.html);
+                                // Response is no-results div
+                                if ($existingProducts.length) {
+                                    $existingProducts.first().replaceWith(response.data.html);
+                                } else if ($existingNoResults.length) {
+                                    $existingNoResults.first().replaceWith(response.data.html);
+                                } else {
+                                    self.$productsContainer.append(response.data.html);
+                                }
                             }
 
                             // Fade in
