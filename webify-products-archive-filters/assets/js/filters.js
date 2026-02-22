@@ -179,28 +179,39 @@
                 data: ajaxData,
                 success: function (response) {
                     if (response.success && self.$productsContainer) {
-                        // Fade out old content
+                        // Fade out the products area
                         self.$productsContainer.css('opacity', '0.3');
 
                         setTimeout(function () {
-                            self.$productsContainer.html(response.data.html);
+                            // Replace only the products list or no-results, not the entire parent
+                            var $existing = self.$productsContainer.find('.products, .wpaf-no-results');
+                            if ($existing.length) {
+                                $existing.first().replaceWith(response.data.html);
+                            } else {
+                                self.$productsContainer.append(response.data.html);
+                            }
 
-                            // Fade in new content
+                            // Fade in
                             self.$productsContainer.css({
                                 'opacity': '0',
                                 'transition': 'opacity 0.3s ease'
                             });
-
-                            // Trigger reflow
                             self.$productsContainer[0].offsetHeight;
                             self.$productsContainer.css('opacity', '1');
 
                             // Update pagination
-                            var $existingPagination = $('.woocommerce-pagination');
+                            var $existingPagination = self.$productsContainer.find('.woocommerce-pagination');
+                            if (!$existingPagination.length) {
+                                $existingPagination = self.$productsContainer.next('.woocommerce-pagination');
+                            }
                             if ($existingPagination.length) {
-                                $existingPagination.replaceWith(response.data.pagination);
+                                if (response.data.pagination) {
+                                    $existingPagination.replaceWith(response.data.pagination);
+                                } else {
+                                    $existingPagination.remove();
+                                }
                             } else if (response.data.pagination) {
-                                self.$productsContainer.after(response.data.pagination);
+                                self.$productsContainer.append(response.data.pagination);
                             }
 
                             // Update product count if visible
