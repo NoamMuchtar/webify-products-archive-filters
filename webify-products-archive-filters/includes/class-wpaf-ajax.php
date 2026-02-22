@@ -4,32 +4,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Modifies the main WooCommerce product query based on URL filter parameters.
+ * Modifies the WooCommerce product query based on URL filter parameters.
+ *
+ * Uses the woocommerce_product_query hook which fires specifically for
+ * product archive queries, avoiding conflicts with other queries.
  */
 class WPAF_Ajax {
 
     public function __construct() {
-        add_action( 'pre_get_posts', [ $this, 'filter_main_query' ] );
+        add_action( 'woocommerce_product_query', [ $this, 'apply_filters' ] );
     }
 
     /**
-     * Modify the main WooCommerce query when filter URL params are present.
+     * Apply URL-based filters to the WooCommerce product query.
+     *
+     * @param WC_Query|WP_Query $query
      */
-    public function filter_main_query( $query ) {
-        if ( is_admin() || ! $query->is_main_query() ) {
-            return;
-        }
-
-        if ( ! is_shop() && ! is_product_taxonomy() ) {
-            return;
-        }
+    public function apply_filters( $query ) {
 
         // Price filter
-        $min_price = isset( $_GET['min_price'] ) ? floatval( $_GET['min_price'] ) : '';
-        $max_price = isset( $_GET['max_price'] ) ? floatval( $_GET['max_price'] ) : '';
+        $min_price = isset( $_GET['min_price'] ) ? floatval( $_GET['min_price'] ) : 0;
+        $max_price = isset( $_GET['max_price'] ) ? floatval( $_GET['max_price'] ) : 0;
 
-        if ( $min_price !== '' && $min_price > 0 ) {
-            $meta_query   = $query->get( 'meta_query', [] );
+        if ( $min_price > 0 ) {
+            $meta_query = $query->get( 'meta_query', [] );
             $meta_query[] = [
                 'key'     => '_price',
                 'value'   => $min_price,
@@ -39,8 +37,8 @@ class WPAF_Ajax {
             $query->set( 'meta_query', $meta_query );
         }
 
-        if ( $max_price !== '' && $max_price > 0 ) {
-            $meta_query   = $query->get( 'meta_query', [] );
+        if ( $max_price > 0 ) {
+            $meta_query = $query->get( 'meta_query', [] );
             $meta_query[] = [
                 'key'     => '_price',
                 'value'   => $max_price,
@@ -50,9 +48,9 @@ class WPAF_Ajax {
             $query->set( 'meta_query', $meta_query );
         }
 
-        // Taxonomy filters (filter_pa_color, filter_product_brand, etc.)
+        // Taxonomy filters (filter_pa_color=red,blue&filter_pa_size=large)
         $tax_query = $query->get( 'tax_query', [] );
-        $has_tax_filters = false;
+        $added     = false;
 
         foreach ( $_GET as $key => $value ) {
             if ( strpos( $key, 'filter_' ) !== 0 || empty( $value ) ) {
@@ -60,25 +58,25 @@ class WPAF_Ajax {
             }
 
             $taxonomy = sanitize_text_field( str_replace( 'filter_', '', $key ) );
-
             if ( ! taxonomy_exists( $taxonomy ) ) {
                 continue;
             }
 
-            $slugs = array_map( 'sanitize_text_field', explode( ',', $value ) );
-
-            if ( ! empty( $slugs ) ) {
-                $tax_query[] = [
-                    'taxonomy' => $taxonomy,
-                    'field'    => 'slug',
-                    'terms'    => $slugs,
-                    'operator' => 'IN',
-                ];
-                $has_tax_filters = true;
+            $slugs = array_filter( array_map( 'sanitize_text_field', explode( ',', $value ) ) );
+            if ( empty( $slugs ) ) {
+                continue;
             }
+
+            $tax_query[] = [
+                'taxonomy' => $taxonomy,
+                'field'    => 'slug',
+                'terms'    => $slugs,
+                'operator' => 'IN',
+            ];
+            $added = true;
         }
 
-        if ( $has_tax_filters ) {
+        if ( $added ) {
             $tax_query['relation'] = 'AND';
             $query->set( 'tax_query', $tax_query );
         }

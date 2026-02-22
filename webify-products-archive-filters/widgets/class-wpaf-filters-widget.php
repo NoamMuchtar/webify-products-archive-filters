@@ -234,11 +234,13 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
         // Always exclude the color attribute from the generic attributes section
         $excluded_slugs[] = $color_attr;
 
-        // Get product IDs in current context so filter terms are contextual
+        // Get product IDs in current archive context for contextual filter terms.
+        // WooCommerce assigns global attribute terms to the parent product post,
+        // so we only need parent product IDs here.
         $context_product_ids = null;
         $queried_pre = get_queried_object();
         if ( $queried_pre instanceof WP_Term ) {
-            $parent_ids = get_posts( [
+            $context_product_ids = get_posts( [
                 'post_type'      => 'product',
                 'post_status'    => 'publish',
                 'posts_per_page' => -1,
@@ -249,20 +251,6 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                     'terms'    => $queried_pre->term_id,
                 ] ],
             ] );
-            // Include variation IDs too, since WooCommerce may assign attributes to variations
-            $context_product_ids = $parent_ids;
-            if ( ! empty( $parent_ids ) ) {
-                $variation_ids = get_posts( [
-                    'post_type'      => 'product_variation',
-                    'post_status'    => 'publish',
-                    'posts_per_page' => -1,
-                    'fields'         => 'ids',
-                    'post_parent__in' => $parent_ids,
-                ] );
-                if ( ! empty( $variation_ids ) ) {
-                    $context_product_ids = array_merge( $parent_ids, $variation_ids );
-                }
-            }
             if ( empty( $context_product_ids ) ) {
                 $context_product_ids = [ 0 ];
             }
@@ -280,12 +268,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
 
         // 2. Color filter
         if ( 'yes' === $settings['show_color_filter'] ) {
-            $terms_args = [
-                'taxonomy'   => $color_attr,
-                'hide_empty' => true,
-            ];
+            $terms_args = [ 'taxonomy' => $color_attr ];
             if ( $context_product_ids !== null ) {
                 $terms_args['object_ids'] = $context_product_ids;
+            } else {
+                $terms_args['hide_empty'] = true;
             }
             $terms = get_terms( $terms_args );
             if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
@@ -309,12 +296,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                 }
             }
             if ( $brand_tax ) {
-                $terms_args = [
-                    'taxonomy'   => $brand_tax,
-                    'hide_empty' => true,
-                ];
+                $terms_args = [ 'taxonomy' => $brand_tax ];
                 if ( $context_product_ids !== null ) {
                     $terms_args['object_ids'] = $context_product_ids;
+                } else {
+                    $terms_args['hide_empty'] = true;
                 }
                 $terms = get_terms( $terms_args );
                 if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
@@ -336,12 +322,11 @@ class WPAF_Filters_Widget extends \Elementor\Widget_Base {
                 if ( in_array( $taxonomy, $excluded_slugs, true ) ) {
                     continue;
                 }
-                $terms_args = [
-                    'taxonomy'   => $taxonomy,
-                    'hide_empty' => true,
-                ];
+                $terms_args = [ 'taxonomy' => $taxonomy ];
                 if ( $context_product_ids !== null ) {
                     $terms_args['object_ids'] = $context_product_ids;
+                } else {
+                    $terms_args['hide_empty'] = true;
                 }
                 $terms = get_terms( $terms_args );
                 if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
