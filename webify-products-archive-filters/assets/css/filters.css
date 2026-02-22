@@ -305,51 +305,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* === Loading Overlay === */
-.wpaf-loader-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(2px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.wpaf-loader-overlay.wpaf-loading {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.wpaf-spinner {
-    width: 28px;
-    height: 28px;
-    border: 2px solid #e0e0e0;
-    border-top-color: #1a1a2e;
-    border-radius: 50%;
-    animation: wpaf-spin 0.65s linear infinite;
-}
-
-@keyframes wpaf-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* === No Results === */
-.wpaf-no-results {
-    text-align: center;
-    padding: 48px 24px;
-    color: #8e8ea0;
-    font-size: 15px;
-    line-height: 1.6;
-}
-
 /* === Mobile Trigger Button === */
 .wpaf-mobile-trigger {
     display: none;

@@ -59,7 +59,6 @@ function wpaf_init() {
     }
 
     require_once WPAF_PLUGIN_DIR . 'includes/class-wpaf-ajax.php';
-    require_once WPAF_PLUGIN_DIR . 'includes/class-wpaf-query.php';
 
     new WPAF_Ajax();
 
@@ -99,11 +98,6 @@ function wpaf_enqueue_assets() {
         true
     );
 
-    wp_localize_script( 'wpaf-filters', 'wpafData', [
-        'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-        'nonce'    => wp_create_nonce( 'wpaf_filter_nonce' ),
-        'shopUrl'  => get_permalink( wc_get_page_id( 'shop' ) ),
-    ] );
 }
 
 /**

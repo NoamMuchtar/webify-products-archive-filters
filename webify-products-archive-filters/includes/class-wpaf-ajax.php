@@ -4,92 +4,83 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Handles AJAX requests for product filtering.
+ * Modifies the main WooCommerce product query based on URL filter parameters.
  */
 class WPAF_Ajax {
 
     public function __construct() {
-        add_action( 'wp_ajax_wpaf_filter_products', [ $this, 'filter_products' ] );
-        add_action( 'wp_ajax_nopriv_wpaf_filter_products', [ $this, 'filter_products' ] );
+        add_action( 'pre_get_posts', [ $this, 'filter_main_query' ] );
     }
 
     /**
-     * AJAX callback — returns filtered products HTML.
+     * Modify the main WooCommerce query when filter URL params are present.
      */
-    public function filter_products() {
-        check_ajax_referer( 'wpaf_filter_nonce', 'nonce' );
+    public function filter_main_query( $query ) {
+        if ( is_admin() || ! $query->is_main_query() ) {
+            return;
+        }
 
-        $params = [
-            'min_price' => isset( $_POST['min_price'] ) ? floatval( $_POST['min_price'] ) : '',
-            'max_price' => isset( $_POST['max_price'] ) ? floatval( $_POST['max_price'] ) : '',
-            'paged'     => isset( $_POST['paged'] ) ? absint( $_POST['paged'] ) : 1,
-            'orderby'   => isset( $_POST['orderby'] ) ? sanitize_text_field( $_POST['orderby'] ) : '',
-            'order'     => isset( $_POST['order'] ) ? sanitize_text_field( $_POST['order'] ) : '',
-            'term_id'   => isset( $_POST['term_id'] ) ? absint( $_POST['term_id'] ) : 0,
-            'taxonomy'  => isset( $_POST['taxonomy'] ) ? sanitize_text_field( $_POST['taxonomy'] ) : '',
-            'filters'   => [],
-        ];
+        if ( ! is_shop() && ! is_product_taxonomy() ) {
+            return;
+        }
 
-        // Collect taxonomy filters
-        if ( ! empty( $_POST['filters'] ) && is_array( $_POST['filters'] ) ) {
-            foreach ( $_POST['filters'] as $taxonomy => $slugs ) {
-                $taxonomy = sanitize_text_field( $taxonomy );
-                if ( is_array( $slugs ) ) {
-                    $params['filters'][ $taxonomy ] = array_map( 'sanitize_text_field', $slugs );
-                } else {
-                    $params['filters'][ $taxonomy ] = array_map( 'sanitize_text_field', explode( ',', $slugs ) );
-                }
+        // Price filter
+        $min_price = isset( $_GET['min_price'] ) ? floatval( $_GET['min_price'] ) : '';
+        $max_price = isset( $_GET['max_price'] ) ? floatval( $_GET['max_price'] ) : '';
+
+        if ( $min_price !== '' && $min_price > 0 ) {
+            $meta_query   = $query->get( 'meta_query', [] );
+            $meta_query[] = [
+                'key'     => '_price',
+                'value'   => $min_price,
+                'compare' => '>=',
+                'type'    => 'NUMERIC',
+            ];
+            $query->set( 'meta_query', $meta_query );
+        }
+
+        if ( $max_price !== '' && $max_price > 0 ) {
+            $meta_query   = $query->get( 'meta_query', [] );
+            $meta_query[] = [
+                'key'     => '_price',
+                'value'   => $max_price,
+                'compare' => '<=',
+                'type'    => 'NUMERIC',
+            ];
+            $query->set( 'meta_query', $meta_query );
+        }
+
+        // Taxonomy filters (filter_pa_color, filter_product_brand, etc.)
+        $tax_query = $query->get( 'tax_query', [] );
+        $has_tax_filters = false;
+
+        foreach ( $_GET as $key => $value ) {
+            if ( strpos( $key, 'filter_' ) !== 0 || empty( $value ) ) {
+                continue;
+            }
+
+            $taxonomy = sanitize_text_field( str_replace( 'filter_', '', $key ) );
+
+            if ( ! taxonomy_exists( $taxonomy ) ) {
+                continue;
+            }
+
+            $slugs = array_map( 'sanitize_text_field', explode( ',', $value ) );
+
+            if ( ! empty( $slugs ) ) {
+                $tax_query[] = [
+                    'taxonomy' => $taxonomy,
+                    'field'    => 'slug',
+                    'terms'    => $slugs,
+                    'operator' => 'IN',
+                ];
+                $has_tax_filters = true;
             }
         }
 
-        $args  = WPAF_Query::build_args( $params );
-        $query = new WP_Query( $args );
-
-        ob_start();
-
-        if ( $query->have_posts() ) {
-            woocommerce_product_loop_start();
-
-            while ( $query->have_posts() ) {
-                $query->the_post();
-
-                /**
-                 * Hook: woocommerce_shop_loop.
-                 */
-                do_action( 'woocommerce_shop_loop' );
-
-                wc_get_template_part( 'content', 'product' );
-            }
-
-            woocommerce_product_loop_end();
-        } else {
-            echo '<li class="wpaf-no-results-item" style="list-style:none;grid-column:1/-1;text-align:center;padding:48px 24px;color:#8e8ea0;font-size:15px;">';
-            echo '<p>' . esc_html__( 'לא נמצאו מוצרים התואמים לסינון שבחרת.', 'webify-products-archive-filters' ) . '</p>';
-            echo '</li>';
+        if ( $has_tax_filters ) {
+            $tax_query['relation'] = 'AND';
+            $query->set( 'tax_query', $tax_query );
         }
-
-        $html = ob_get_clean();
-
-        // Pagination — only inner links, JS will inject into existing wrapper
-        $total_pages = $query->max_num_pages;
-        $pagination  = '';
-        if ( $total_pages > 1 ) {
-            $pagination = '<nav class="woocommerce-pagination">' . paginate_links( [
-                'total'     => $total_pages,
-                'current'   => $params['paged'],
-                'format'    => '?paged=%#%',
-                'prev_text' => '&laquo;',
-                'next_text' => '&raquo;',
-            ] ) . '</nav>';
-        }
-
-        wp_reset_postdata();
-
-        wp_send_json_success( [
-            'html'        => $html,
-            'pagination'  => $pagination,
-            'found_posts' => $query->found_posts,
-            'max_pages'   => $total_pages,
-        ] );
     }
 }

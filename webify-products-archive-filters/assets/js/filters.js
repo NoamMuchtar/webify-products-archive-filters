@@ -2,15 +2,12 @@
     'use strict';
 
     var WPAF = {
-        isLoading: false,
         priceDebounceTimer: null,
 
         init: function () {
             this.cacheDOM();
             if (!this.$wrapper.length) return;
             this.bindEvents();
-            this.restoreFromURL();
-            this.updateActiveCountBadge();
         },
 
         cacheDOM: function () {
@@ -19,15 +16,6 @@
             this.$mobileTrigger = $('.wpaf-mobile-trigger');
             this.$overlay = $('.wpaf-sidebar-overlay');
             this.$closeBtn = this.$wrapper.find('.wpaf-sidebar-close');
-            this.$productsContainer = null;
-            this.$productsList = null;
-
-            // Find the products container (Elementor archive products widget)
-            var $products = $('.products');
-            if ($products.length) {
-                this.$productsList = $products.first();
-                this.$productsContainer = this.$productsList.parent();
-            }
         },
 
         bindEvents: function () {
@@ -41,9 +29,6 @@
             this.$closeBtn.on('click', this.closeSidebar.bind(this));
             this.$overlay.on('click', this.closeSidebar.bind(this));
 
-            // Handle pagination clicks on AJAX-loaded pagination
-            $(document).on('click', '.woocommerce-pagination a', this.handlePagination.bind(this));
-
             // Close sidebar on ESC
             $(document).on('keydown', function (e) {
                 if (e.key === 'Escape') {
@@ -51,19 +36,17 @@
                 }
             });
 
-            // Auto-apply on checkbox change
+            // Auto-navigate on checkbox change
             this.$wrapper.on('change', 'input[type="checkbox"]', function () {
-                self.updateActiveCountBadge();
-                self.applyFilters(1);
+                self.navigate();
             });
 
-            // Auto-apply on price change (debounced)
+            // Auto-navigate on price change (debounced)
             this.$wrapper.on('input', '.wpaf-price-input', function () {
-                self.updateActiveCountBadge();
                 clearTimeout(self.priceDebounceTimer);
                 self.priceDebounceTimer = setTimeout(function () {
-                    self.applyFilters(1);
-                }, 600);
+                    self.navigate();
+                }, 800);
             });
         },
 
@@ -97,47 +80,18 @@
         },
 
         /**
-         * Count the number of active filters and update the badge on the mobile trigger.
+         * Collect all current filter selections and navigate to the filtered URL.
          */
-        updateActiveCountBadge: function () {
-            var count = 0;
-
-            // Count checked checkboxes
-            this.$wrapper.find('input[type="checkbox"]:checked').each(function () {
-                count++;
-            });
-
-            // Count filled price fields
-            var min = this.$wrapper.find('input[name="min_price"]').val();
-            var max = this.$wrapper.find('input[name="max_price"]').val();
-            if (min) count++;
-            if (max) count++;
-
-            // Update badge
-            var $badge = this.$mobileTrigger.find('.wpaf-active-count');
-            if (count > 0) {
-                if ($badge.length) {
-                    $badge.text(count);
-                } else {
-                    this.$mobileTrigger.append('<span class="wpaf-active-count">' + count + '</span>');
-                }
-            } else {
-                $badge.remove();
-            }
-        },
-
-        collectFilters: function () {
-            var data = {
-                filters: {}
-            };
+        navigate: function () {
+            var params = new URLSearchParams();
 
             // Price
             var minPrice = this.$wrapper.find('input[name="min_price"]').val();
             var maxPrice = this.$wrapper.find('input[name="max_price"]').val();
-            if (minPrice) data.min_price = minPrice;
-            if (maxPrice) data.max_price = maxPrice;
+            if (minPrice) params.set('min_price', minPrice);
+            if (maxPrice) params.set('max_price', maxPrice);
 
-            // Checkbox filters (colors, brands & attributes)
+            // Checkbox filters (color, brand, attributes)
             this.$wrapper.find('.wpaf-checkbox-filter').each(function () {
                 var taxonomy = $(this).data('taxonomy');
                 var selected = [];
@@ -145,214 +99,20 @@
                     selected.push($(this).val());
                 });
                 if (selected.length) {
-                    data.filters[taxonomy] = selected;
+                    params.set('filter_' + taxonomy, selected.join(','));
                 }
             });
-
-            return data;
-        },
-
-        applyFilters: function (paged) {
-            if (this.isLoading) return;
-
-            var filterData = this.collectFilters();
-            var pageNum = typeof paged === 'number' ? paged : 1;
-
-            this.isLoading = true;
-            this.showLoader();
-            this.updateURL(filterData, pageNum);
-
-            var ajaxData = {
-                action: 'wpaf_filter_products',
-                nonce: wpafData.nonce,
-                paged: pageNum,
-                min_price: filterData.min_price || '',
-                max_price: filterData.max_price || '',
-                filters: filterData.filters || {},
-                term_id: this.$wrapper.data('term-id') || 0,
-                taxonomy: this.$wrapper.data('taxonomy') || '',
-            };
-
-            var self = this;
-
-            $.ajax({
-                url: wpafData.ajaxUrl,
-                type: 'POST',
-                data: ajaxData,
-                success: function (response) {
-                    if (response.success && self.$productsList) {
-                        // Fade out the products area
-                        self.$productsContainer.css('opacity', '0.3');
-
-                        setTimeout(function () {
-                            // Parse new product items from response
-                            var $newContent = $(response.data.html);
-                            var newInner;
-
-                            if ($newContent.hasClass('products')) {
-                                // Response wrapped in <ul class="products"> — extract children
-                                newInner = $newContent.html();
-                            } else {
-                                // No-results or raw items — use as-is
-                                newInner = response.data.html;
-                            }
-
-                            // Always inject into existing .products, preserving wrapper classes
-                            self.$productsList.html(newInner).show();
-
-                            // Fade in
-                            self.$productsContainer.css({
-                                'opacity': '0',
-                                'transition': 'opacity 0.3s ease'
-                            });
-                            self.$productsContainer[0].offsetHeight;
-                            self.$productsContainer.css('opacity', '1');
-
-                            // Update pagination — only inner links, preserve the wrapper element
-                            var $existingPagination = $('.woocommerce-pagination');
-                            if (response.data.pagination) {
-                                var $newPagination = $(response.data.pagination);
-                                if ($existingPagination.length) {
-                                    // Preserve wrapper, update only inner links
-                                    $existingPagination.first().html($newPagination.html());
-                                    $existingPagination.first().show();
-                                } else {
-                                    self.$productsContainer.after(response.data.pagination);
-                                }
-                            } else {
-                                $existingPagination.hide();
-                            }
-
-                            // Update product count if visible
-                            var $resultCount = $('.woocommerce-result-count');
-                            if ($resultCount.length && response.data.found_posts !== undefined) {
-                                $resultCount.text(response.data.found_posts + ' ' + (response.data.found_posts === 1 ? 'מוצר' : 'מוצרים'));
-                            }
-
-                            // Scroll to products
-                            $('html, body').animate({
-                                scrollTop: self.$productsContainer.offset().top - 100
-                            }, 350);
-                        }, 150);
-                    }
-                },
-                error: function () {
-                    if (self.$productsContainer) {
-                        self.$productsContainer.css('opacity', '1');
-                    }
-                },
-                complete: function () {
-                    self.isLoading = false;
-                    self.hideLoader();
-                    self.updateActiveCountBadge();
-                }
-            });
-        },
-
-        handlePagination: function (e) {
-            e.preventDefault();
-            var href = $(e.currentTarget).attr('href');
-            var page = 1;
-
-            var pageMatch = href.match(/\/page\/(\d+)/);
-            if (pageMatch) {
-                page = parseInt(pageMatch[1], 10);
-            } else {
-                pageMatch = href.match(/paged[=\/](\d+)/);
-                if (pageMatch) {
-                    page = parseInt(pageMatch[1], 10);
-                }
-            }
-
-            this.applyFilters(page);
-        },
-
-        updateURL: function (filterData, paged) {
-            if (!window.history || !window.history.pushState) return;
-
-            var params = new URLSearchParams();
-
-            if (filterData.min_price) params.set('min_price', filterData.min_price);
-            if (filterData.max_price) params.set('max_price', filterData.max_price);
-
-            if (filterData.filters) {
-                for (var taxonomy in filterData.filters) {
-                    if (filterData.filters.hasOwnProperty(taxonomy)) {
-                        params.set('filter_' + taxonomy, filterData.filters[taxonomy].join(','));
-                    }
-                }
-            }
-
-            if (paged && paged > 1) params.set('paged', paged);
 
             var newUrl = window.location.pathname;
             var queryString = params.toString();
             if (queryString) newUrl += '?' + queryString;
 
-            window.history.pushState({ wpaf: true }, '', newUrl);
-        },
-
-        restoreFromURL: function () {
-            var params = new URLSearchParams(window.location.search);
-
-            // Restore price
-            if (params.has('min_price')) {
-                this.$wrapper.find('input[name="min_price"]').val(params.get('min_price'));
-            }
-            if (params.has('max_price')) {
-                this.$wrapper.find('input[name="max_price"]').val(params.get('max_price'));
-            }
-
-            // Restore taxonomy filters from URL
-            var self = this;
-            params.forEach(function (value, key) {
-                if (key.indexOf('filter_') === 0) {
-                    var taxonomy = key.replace('filter_', '');
-                    var slugs = value.split(',');
-
-                    slugs.forEach(function (slug) {
-                        var $checkInput = self.$wrapper.find('.wpaf-checkbox-filter[data-taxonomy="' + taxonomy + '"] input[value="' + slug + '"]');
-                        if ($checkInput.length) {
-                            $checkInput.prop('checked', true);
-                        }
-                    });
-                }
-            });
-        },
-
-        showLoader: function () {
-            if (!this.$productsContainer) return;
-
-            if (!this.$productsContainer.find('.wpaf-loader-overlay').length) {
-                this.$productsContainer.css('position', 'relative').append(
-                    '<div class="wpaf-loader-overlay"><div class="wpaf-spinner"></div></div>'
-                );
-            }
-
-            // Trigger reflow before adding class
-            this.$productsContainer.find('.wpaf-loader-overlay')[0].offsetHeight;
-            this.$productsContainer.find('.wpaf-loader-overlay').addClass('wpaf-loading');
-        },
-
-        hideLoader: function () {
-            if (!this.$productsContainer) return;
-            var $overlay = this.$productsContainer.find('.wpaf-loader-overlay');
-            $overlay.removeClass('wpaf-loading');
-            setTimeout(function () {
-                $overlay.remove();
-            }, 300);
+            window.location.href = newUrl;
         }
     };
 
     $(document).ready(function () {
         WPAF.init();
-    });
-
-    // Handle browser back/forward navigation
-    $(window).on('popstate', function (e) {
-        if (e.originalEvent.state && e.originalEvent.state.wpaf) {
-            window.location.reload();
-        }
     });
 
 })(jQuery);
