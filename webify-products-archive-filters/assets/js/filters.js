@@ -2,8 +2,7 @@
     'use strict';
 
     var WPAF = {
-        priceDebounceTimer: null,
-        ready: false,
+        navigating: false,
 
         init: function () {
             this.$wrapper = $('.wpaf-filters-wrapper');
@@ -15,10 +14,6 @@
             this.$closeBtn = this.$wrapper.find('.wpaf-sidebar-close');
 
             this.bindEvents();
-
-            // Mark ready after a tick so page-load checkbox states don't trigger navigation
-            var self = this;
-            setTimeout(function () { self.ready = true; }, 100);
         },
 
         bindEvents: function () {
@@ -29,7 +24,7 @@
                 var $item = $(e.currentTarget).closest('.wpaf-accordion-item');
                 var isActive = $item.hasClass('wpaf-active');
                 $item.toggleClass('wpaf-active', !isActive);
-                $(e.currentTarget).attr('aria-expanded', !isActive);
+                $(e.currentTarget).attr('aria-expanded', String(!isActive));
                 $item.find('.wpaf-accordion-body')[isActive ? 'slideUp' : 'slideDown'](280);
             });
 
@@ -41,13 +36,14 @@
                 if (e.key === 'Escape') self.closeSidebar();
             });
 
-            // Filter changes → navigate
+            // Checkbox change → navigate (one-shot guard prevents infinite loop)
             this.$wrapper.on('change', 'input[type="checkbox"]', function () {
-                if (self.ready) self.navigate();
+                self.navigate();
             });
 
+            // Price: navigate on Enter key or blur
             this.$wrapper.on('change', '.wpaf-price-input', function () {
-                if (self.ready) self.navigate();
+                self.navigate();
             });
         },
 
@@ -63,9 +59,30 @@
             $('body').removeClass('wpaf-sidebar-active');
         },
 
-        buildUrl: function () {
-            var params = new URLSearchParams();
+        navigate: function () {
+            // One-shot guard: only navigate once per page load
+            if (this.navigating) return;
+            this.navigating = true;
 
+            // Start from current URL params to preserve WooCommerce params (orderby, etc)
+            var params = new URLSearchParams(window.location.search);
+
+            // Clear old filter params
+            var toDelete = [];
+            params.forEach(function (val, key) {
+                if (key === 'min_price' || key === 'max_price' || key.indexOf('filter_') === 0) {
+                    toDelete.push(key);
+                }
+            });
+            for (var i = 0; i < toDelete.length; i++) {
+                params.delete(toDelete[i]);
+            }
+
+            // Reset pagination when filters change
+            params.delete('paged');
+            params.delete('product-page');
+
+            // Collect current filter values
             var minPrice = this.$wrapper.find('input[name="min_price"]').val();
             var maxPrice = this.$wrapper.find('input[name="max_price"]').val();
             if (minPrice) params.set('min_price', minPrice);
@@ -84,17 +101,9 @@
 
             var url = window.location.pathname;
             var qs = params.toString();
-            return qs ? url + '?' + qs : url;
-        },
+            if (qs) url += '?' + qs;
 
-        navigate: function () {
-            var newUrl = this.buildUrl();
-            var currentUrl = window.location.pathname + window.location.search;
-
-            // Only navigate if URL actually changed
-            if (newUrl !== currentUrl) {
-                window.location.href = newUrl;
-            }
+            window.location.href = url;
         }
     };
 
